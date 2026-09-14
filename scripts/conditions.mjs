@@ -527,7 +527,12 @@ Hooks.on("preCreateActiveEffect", async (effect, options, userId) => {
     let effectName = effect.name.toLowerCase();
     let alcoholEffect = Object.values(ALCOHOL_EFFECTS).find(e => e.name.toLowerCase() === effectName);
 
-    if (alcoholEffect && effectName != "incapacitated") {
+    // Skip effects that already have their changes populated (e.g. by addAlcoholEffect(),
+    // which already applied the correct per-actor data including Deep Gut halving) -
+    // this hook is only meant to backfill a bare, manually-created effect (changes.length === 0).
+    // Without this guard, this hook unconditionally overwrites changes from the raw shared
+    // ALCOHOL_EFFECTS template, silently undoing addAlcoholEffect()'s Deep Gut halving every time.
+    if (alcoholEffect && effectName != "incapacitated" && effect.changes.length === 0) {
 
         // Modify the effect directly
         await effect.updateSource({

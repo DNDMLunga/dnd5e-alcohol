@@ -9,14 +9,16 @@ async function SightChatMessage(actor) {
         await ChatMessage.create({
             speaker: ChatMessage.getSpeaker({ actor }),
             content: chatContent,
-            type: CONST.CHAT_MESSAGE_STYLES.OTHER
+            style: CONST.CHAT_MESSAGE_STYLES.OTHER
         });
     }
 }
 
 
 Hooks.on("combatTurnChange", async (combat) => {
-    let token = combat.turns[combat.turn].token;
+    const combatant = combat.turns[combat.turn];
+    if (!combatant?.token?.actor) return;
+    let token = combatant.token;
 
     // if token is not drunk, exit
     let isDrunk = token.actor.effects.some(effect => effect.name.toLowerCase() == "drunk");
@@ -28,8 +30,8 @@ Hooks.on("combatTurnChange", async (combat) => {
 
     // Find tokens with the terror feature
     let featureName = "terror of the barrom";
-    let terrorTokens = canvas.tokens.objects.children.filter(token => 
-        token.actor.items.some(item => 
+    let terrorTokens = canvas.tokens.objects.children.filter(token =>
+        token.actor && token.actor.items.some(item =>
             item.name.toLowerCase() === featureName));
     
     // If no tokens have the feature, exit

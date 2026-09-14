@@ -42,7 +42,14 @@ Hooks.on("preCreateChatMessage", (chatMessage) => {
 
 
 
-Hooks.on("preCreateActiveEffect", async (effect, options, userId) => {
+// NOT async: Foundry's preCreate veto only respects a SYNCHRONOUS `false` return.
+// An async function's immediate return value is always a Promise (truthy), so
+// `return false` from an async listener here never actually cancels creation -
+// the raw "Alcohol - Potency X" effect was being created and left on the actor
+// permanently on every real drink, on top of the intended flow below. The
+// async calls are fire-and-forget (not awaited) so this listener itself stays
+// synchronous; nothing after them depended on their completion anyway.
+Hooks.on("preCreateActiveEffect", (effect, options, userId) => {
     let effectName = effect.name.toLowerCase();
     let actor = effect.parent;
     //console.log(effectName);
@@ -60,18 +67,18 @@ Hooks.on("preCreateActiveEffect", async (effect, options, userId) => {
     let skipchatcard = game.settings.get('dnd5e-alcohol', 'skipConRollInebriation');
     if (skipchatcard){
         if (properties.map(p => p.toLowerCase()).includes("sobering")) {
-            await decrease_inebriation_points(actor, potency);
+            decrease_inebriation_points(actor, potency);
         } else {
-            await add_inebriation_points(actor, potency);
+            add_inebriation_points(actor, potency);
         }
 
-        await apply_alcohol_properties_to_actor(actor, properties);
+        apply_alcohol_properties_to_actor(actor, properties);
         return false;
     }
 
     create_alcohol_chat_message_for_actor(actor, potency, properties);
     return false;
-    
+
 });
 
 

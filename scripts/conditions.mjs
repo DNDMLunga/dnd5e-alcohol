@@ -486,7 +486,7 @@ async function AlcoholChatMessage(actor, addedConditions = [], removedConditions
         await ChatMessage.create({
             speaker: ChatMessage.getSpeaker({ actor }),
             content: chatContent,
-            type: CONST.CHAT_MESSAGE_STYLES.OTHER
+            style: CONST.CHAT_MESSAGE_STYLES.OTHER
         });
     }
 }
@@ -523,7 +523,7 @@ Hooks.on("preCreateActiveEffect", async (effect, options, userId) => {
     let effectName = effect.name.toLowerCase();
     let alcoholEffect = Object.values(ALCOHOL_EFFECTS).find(e => e.name.toLowerCase() === effectName);
 
-    if (alcoholEffect & effectName != "incapacitated") {
+    if (alcoholEffect && effectName != "incapacitated") {
 
         // Modify the effect directly
         await effect.updateSource({

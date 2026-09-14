@@ -404,7 +404,11 @@ function add_click_event_apply_condition(html){
 async function addAlcoholEffect(actor, condition, chatMessage = true) {
     //console.log(`Adding alcohol effect: ${condition}`);
     if (!actor || !ALCOHOL_EFFECTS[condition.toLowerCase()]) return;
-    let effectData = ALCOHOL_EFFECTS[condition.toLowerCase()];
+    // Clone, don't reference: ALCOHOL_EFFECTS is the shared module-level template.
+    // The Deep Gut halving below used to mutate it directly, which permanently
+    // corrupted the Tipsy/Drunk/Wasted definitions for every other actor for the
+    // rest of the session after the first Deep Gut character triggered it.
+    let effectData = structuredClone(ALCOHOL_EFFECTS[condition.toLowerCase()]);
 
     // If actor has deep gut, reduce skill penalties with half
     if (actor.items.some(item => item.name.toLowerCase() == "deep gut")){

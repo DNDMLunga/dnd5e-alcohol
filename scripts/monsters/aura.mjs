@@ -8,15 +8,17 @@ Hooks.on("combatTurnChange", async (combat) => {
     console.log(combat);
     // Find Keg Golems in combat
     let featureName = "alcoholic fumes";
-    let fume_combatants = combat.turns.filter(combatant => 
-        combatant.actor.items.some(item => 
+    let fume_combatants = combat.turns.filter(combatant =>
+        combatant.actor && combatant.actor.items.some(item =>
             item.name.toLowerCase().startsWith(featureName)));
     // Exit if no Keg Golems
     if (fume_combatants.length === 0){return;}
 
     // Exit if current combatant has feature
     let combatant = combat.turns[combat.turn];
+    if (!combatant?.actor) return;
     if (combatant.actor.items.some(item => item.name.toLowerCase().startsWith(featureName))){return;};
+    if (!combatant.token) return;
 
     // Combatant with turns area
     let size = canvas.dimensions.size;
@@ -24,9 +26,9 @@ Hooks.on("combatTurnChange", async (combat) => {
     let token = combatant.token;
     let tokenArea = [
         [token.x, token.y],
-        [token.x + token.width, token.y],
-        [token.x + token.width, token.y + token.height],
-        [token.x, token.y + token.height]
+        [token.x + (token.width*size), token.y],
+        [token.x + (token.width*size), token.y + (token.height*size)],
+        [token.x, token.y + (token.height*size)]
     ];
     console.log(tokenArea);
     // Look if the combatant is next to each golem
@@ -60,6 +62,10 @@ Hooks.on("combatTurnChange", async (combat) => {
         if (isOverlapping(fumeArea, tokenArea, 0)){
             //console.log(`${token.name} is inside a ${enemy.name}'s fume area!`);
             let drink = random_alcohol_effect_in_inventory(enemy.actor);
+            if (drink === undefined) {
+                console.warn(`${enemy.name} has the fumes feature but no alcohol-effect items in inventory; skipping.`);
+                continue;
+            }
             //console.log(`Applying highest potency drink effect:`, drink);
             let [potency, properties] = extract_potency_properties_from_name(drink);
             //console.log(combatant.actor);
